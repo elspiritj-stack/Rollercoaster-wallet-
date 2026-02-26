@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROLLERCOASTER WALLET</title>
+
+<style>
+body{
+margin:0;
+font-family:Segoe UI, sans-serif;
+background:linear-gradient(180deg,#001d2e,#000814);
+color:white;
+text-align:center;
+overflow-x:hidden;
+}
+
+/* Sparkle Background */
+.stars{
+position:fixed;
+width:100%;
+height:100%;
+background-image:
+radial-gradient(2px 2px at 20px 30px, #fff, transparent),
+radial-gradient(2px 2px at 80px 120px, #fff, transparent),
+radial-gradient(1px 1px at 150px 200px, #fff, transparent);
+animation:moveStars 20s linear infinite;
+opacity:0.2;
+z-index:-1;
+}
+
+@keyframes moveStars{
+from{background-position:0 0;}
+to{background-position:500px 500px;}
+}
+
+/* Golden Coin */
+.coin{
+font-size:70px;
+margin-top:40px;
+background:linear-gradient(45deg,#ffd700,#ff8800);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+animation:spin 5s linear infinite;
+filter:drop-shadow(0 0 15px gold);
+}
+
+@keyframes spin{
+from{transform:rotateY(0deg);}
+to{transform:rotateY(360deg);}
+}
+
+button{
+padding:10px 20px;
+margin:8px;
+border:none;
+border-radius:8px;
+background:linear-gradient(45deg,#ffd700,#ff8800);
+color:black;
+font-weight:bold;
+cursor:pointer;
+}
+
+button:hover{
+box-shadow:0 0 15px gold;
+}
+
+input{
+padding:8px;
+margin:6px;
+border-radius:6px;
+border:none;
+width:220px;
+background:#111;
+color:white;
+}
+
+.section{display:none;margin-top:30px;}
+
+.card{
+background:rgba(255,255,255,0.05);
+padding:15px;
+margin:15px;
+border-radius:12px;
+box-shadow:0 0 20px #00f7ff22;
+}
+
+/* Thunder Processing */
+.overlay{
+position:fixed;
+top:0;left:0;
+width:100%;height:100%;
+background:#000;
+display:none;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+z-index:999;
+}
+
+.thunder{
+font-size:60px;
+color:gold;
+animation:flash 0.5s infinite alternate;
+}
+
+@keyframes flash{
+from{opacity:0.4;}
+to{opacity:1;}
+}
+</style>
+</head>
+
+<body>
+
+<div class="stars"></div>
+
+<!-- HOME -->
+<div id="home">
+<div class="coin">$</div>
+<h2>ROLLERCOASTER WALLET</h2>
+<button onclick="showRegister()">Create Wallet</button>
+<button onclick="showLogin()">Login</button>
+<button onclick="showAdmin()">Admin</button>
+</div>
+
+<!-- REGISTER -->
+<div id="register" class="section">
+<h3>Create Wallet</h3>
+<input id="regUser" placeholder="Username"><br>
+<input id="regPass" type="password" placeholder="Password"><br>
+<button onclick="createWallet()">Create</button>
+<button onclick="goHome()">Back</button>
+</div>
+
+<!-- LOGIN -->
+<div id="login" class="section">
+<h3>Login</h3>
+<input id="logUser" placeholder="Username"><br>
+<input id="logPass" type="password" placeholder="Password"><br>
+<button onclick="loginWallet()">Login</button>
+<button onclick="goHome()">Back</button>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="section">
+<h3>Welcome <span id="userDisplay"></span></h3>
+
+<div class="card">
+Wallet ID: <span id="walletID"></span><br>
+Balance: <span id="balance"></span>
+</div>
+
+<div class="card">
+<input id="sendTo" placeholder="Receiver Username"><br>
+<input id="sendAmount" type="number" placeholder="Amount"><br>
+<button onclick="sendCoin()">Send 1 R = $0.5</button>
+</div>
+
+<button onclick="logout()">Logout</button>
+</div>
+
+<!-- ADMIN -->
+<div id="admin" class="section">
+<h3>Admin Panel</h3>
+<input id="adminPass" type="password" placeholder="Admin Password"><br>
+<button onclick="adminLogin()">Enter</button>
+<div id="adminControls" style="display:none">
+<div class="card">
+Total Supply: 21,000,000,000<br>
+Reserve: <span id="reserve"></span>
+</div>
+
+<input id="mintUser" placeholder="Username"><br>
+<input id="mintAmount" type="number" placeholder="Amount"><br>
+<button onclick="mint()">Mint</button>
+</div>
+<button onclick="goHome()">Back</button>
+</div>
+
+<!-- RECEIPT -->
+<div id="receipt" class="section">
+<h2>⚡ Transaction Successful</h2>
+<div class="card">
+<div id="receiptDetails"></div>
+</div>
+<button onclick="goHome()">Home</button>
+</div>
+
+<!-- PROCESSING -->
+<div id="processing" class="overlay">
+<div class="thunder">⚡</div>
+<h3>Processing Transaction...</h3>
+</div>
+
+<script>
+const TOTAL_SUPPLY = 21000000000;
+const ADMIN_PASSWORD = "2546818Akongwubel@";
+
+let currentUser=null;
+
+if(!localStorage.getItem("users")){
+localStorage.setItem("users", JSON.stringify([]));
+localStorage.setItem("reserve", TOTAL_SUPPLY);
+}
+
+function getUsers(){
+return JSON.parse(localStorage.getItem("users"));
+}
+
+function saveUsers(users){
+localStorage.setItem("users", JSON.stringify(users));
+}
+
+function hideAll(){
+["home","register","login","dashboard","admin","receipt"]
+.forEach(id=>document.getElementById(id).style.display="none");
+}
+
+function goHome(){hideAll();home.style.display="block";}
+function showRegister(){hideAll();register.style.display="block";}
+function showLogin(){hideAll();login.style.display="block";}
+function showAdmin(){hideAll();admin.style.display="block";}
+
+function createWallet(){
+let users=getUsers();
+let user=regUser.value;
+let pass=regPass.value;
+if(!user||!pass){alert("Fill fields");return;}
+if(users.find(u=>u.username===user)){alert("Exists");return;}
+
+users.push({username:user,password:pass,balance:0});
+saveUsers(users);
+alert("Wallet Created");
+goHome();
+}
+
+function loginWallet(){
+let users=getUsers();
+let user=users.find(u=>u.username===logUser.value && u.password===logPass.value);
+if(!user){alert("Invalid");return;}
+currentUser=user.username;
+loadDashboard();
+}
+
+function loadDashboard(){
+hideAll();
+dashboard.style.display="block";
+let user=getUsers().find(u=>u.username===currentUser);
+userDisplay.innerText=user.username;
+walletID.innerText=user.username+"-RC";
+balance.innerText=user.balance+" RC";
+}
+
+function sendCoin(){
+let users=getUsers();
+let sender=users.find(u=>u.username===currentUser);
+let receiver=users.find(u=>u.username===sendTo.value);
+let amt=parseInt(sendAmount.value);
+
+if(!receiver||amt<=0||sender.balance<amt){alert("Invalid");return;}
+
+processing.style.display="flex";
+
+setTimeout(()=>{
+sender.balance-=amt;
+receiver.balance+=amt;
+saveUsers(users);
+
+processing.style.display="none";
+hideAll();
+receipt.style.display="block";
+
+receiptDetails.innerHTML=
+"From: "+sender.username+"<br>"+
+"To: "+receiver.username+"<br>"+
+"Amount: "+amt+" RC<br>"+
+"Time: "+new Date().toLocaleString();
+
+},4000);
+}
+
+function logout(){currentUser=null;goHome();}
+
+function adminLogin(){
+if(adminPass.value===ADMIN_PASSWORD){
+adminControls.style.display="block";
+reserve.innerText=localStorage.getItem("reserve");
+}else alert("Wrong Password");
+}
+
+function mint(){
+let users=getUsers();
+let user=users.find(u=>u.username===mintUser.value);
+let amt=parseInt(mintAmount.value);
+let reserveVal=parseInt(localStorage.getItem("reserve"));
+
+if(!user||amt<=0||reserveVal<amt){alert("Invalid");return;}
+
+user.balance+=amt;
+localStorage.setItem("reserve",reserveVal-amt);
+saveUsers(users);
+reserve.innerText=localStorage.getItem("reserve");
+alert("Minted");
+}
+
+goHome();
+</script>
+
+</body>
+</html>
